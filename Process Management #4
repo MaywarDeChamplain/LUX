@@ -1,0 +1,7 @@
+$champOpen = Get-Process -Name "chrome"
+if($champOpen) {
+Stop-Process -Name "chrome"
+}
+else {
+Start-Process "chrome" "http://www.champlain.edu"
+}
