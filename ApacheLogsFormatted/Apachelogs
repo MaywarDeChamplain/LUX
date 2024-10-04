@@ -1,0 +1,44 @@
+
+function codez($pageName, $HTTPCode, $browser)
+{
+#what is the slash for in front of page name?
+    $notfounds =  Get-Content C:\xampp\apache\logs\access.log |  Select-String /$pageName |  Select-String $HTTPCode |  Select-String $browser
+
+
+    $regex = [regex] "(\b25[0-5]\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}"
+
+    $ipsUnorganized = $regex.Matches($notfounds)
+
+    $ips = @()
+
+    for ($i = 0; $i -lt $ipsUnorganized.Count; $i++)
+    {
+        $ips += [pscustomobject]@{ "IP" = $ipsUnorganized[$i].Value; }
+    }
+
+    $ipsoftens = $ips | Where-Object {$_.IP -ilike "184.*"}
+    $counts = $ipsoftens | Group IP
+    $counts | Select-Object Count, Name
+}
+
+
+function logz()
+{
+    $logsNotFormatted = Get-Content  C:\xampp\apache\logs\access.log 
+    $tablez = @()
+    
+    for ($i = 0; $i -lt $logsNotFormatted.Count; $i++)
+    {
+        $words = $logsNotFormatted[$i].Split(" ");
+        $tablez += [pscustomobject]@{"IP" = $words[0];
+                                                 "Time" = $words[3];`
+                                                 "Method" = $words[5].Trim('[');`
+                                                 "Page" = $words[6].Trim('"');`
+                                                 "Protocol" = $words[7];`
+                                                 "Response" = $words[8];`
+                                                 "Referrer" = $words[10];`
+                                                 "Client" = $words[11..($words.Count - 2)]; }
+  }
+  return $tablez | where-Object {$_.IP -ilike "184.*"}
+
+}
