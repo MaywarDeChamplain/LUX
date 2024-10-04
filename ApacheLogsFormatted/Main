@@ -1,0 +1,6 @@
+. (Join-Path $PSScriptRoot Apache-Logs.ps1)
+
+$tableRecords = logz
+$tableRecords | Format-Table -AutoSize -Wrap
+
+codez "index.html" " 404 " "Chrome"
