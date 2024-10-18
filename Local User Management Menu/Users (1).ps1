@@ -82,7 +82,7 @@ function checkUser($name)
 
 function checkPassword($password)
 {
-    $basePassword = [System.Runtime.Interop.Services.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToGlobalAllocUnicode($password))
+    $basePassword = $password
 
     if ($basePassword.Length -lt 6)
     {
