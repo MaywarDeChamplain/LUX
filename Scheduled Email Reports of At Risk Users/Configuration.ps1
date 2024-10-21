@@ -1,4 +1,4 @@
-﻿function readConfiguration()
+function readConfiguration()
 {
     $configurationFile = ("$PSScriptRoot\configuration.txt")
     $configurationFile = Get-Content $configurationFile
