@@ -1,4 +1,4 @@
-﻿function SendAlertEmail($Body)
+function SendAlertEmail($Body)
 {
     $From = "noah.maywar@mymail.champlain.edu"
     $To = "noah.maywar@mymail.champlain.edu"
