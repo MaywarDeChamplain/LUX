@@ -1,4 +1,4 @@
-﻿function ChooseTimeToRun($Time)
+function ChooseTimeToRun($Time)
 {
     $scheduledTasks = Get-ScheduledTask | Where-Object { $_.TaskName -ilike "myTask"}
 
@@ -10,10 +10,10 @@
 
     Write-Host "Creating new task." | Out-String
 
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"C:\Users\champuser\CSI-230-02\week7\main.ps1`""
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"$PSScriptRoot\MainScheduledEmailReports.ps1`""
     $trigger = New-ScheduledTaskTrigger -Daily -At $Time
-    $principal = New-ScheduledTaskPrincipal -UserId 'champuser' -RunLevel Highest
-    $settings = New-ScheduledTaskSettingsSet -RunOnlyIfNetworkAvailable -WakeToRunttings
+    $principal = New-ScheduledTaskPrincipal -UserId 'may' -RunLevel Highest
+    $settings = New-ScheduledTaskSettingsSet -RunOnlyIfNetworkAvailable -WakeToRun
 
     $task = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Settings $settings
 
@@ -28,10 +28,9 @@ function DisableAutoRun()
 
     if ($scheduledTasks -ne $null)
     {
-        Write-Host "Unregisterting the task." | Out-String
+        Write-Host "Unregistering the task." | Out-String
         Unregister-ScheduledTask -TaskName 'myTask' -Confirm:$false
     }
-
     else
     {
         Write-Host "The task is not registered." | Out-String
