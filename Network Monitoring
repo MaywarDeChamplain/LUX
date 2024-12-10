@@ -1,0 +1,98 @@
+#!/bin/bash
+
+#yoinked from previous assignment
+myIP=$(ip addr show $(ip route | awk '/default/ { print $5 } ') \
+| grep "inet" | head -n 1 | awk '/inet/ {print $2}' | cut -d'/' -f1)
+
+# Todo-1: Create a helpmenu function that prints help for the script
+
+function helpmenu() {
+  echo "HELP MENU"
+  echo "----------"
+  echo "-n: Add -n as an argument for this script to use nmap"
+  echo "    -n external: External NMAP scan"
+  echo "    -n internal: Internal NMAP scan"
+  echo "-s: Add -s as an argument for this script to use ss"
+  echo "    -s external: External ss(Netstat) scan"
+  echo "    -s internal: Internal ss(Netstat) scan"
+  echo "Usage: bash networkchecker.bash -n/-s external/internal"
+  exit 1
+}
+
+# Return ports that are serving to the network
+function ExternalNmap() {
+  rex=$(nmap "${myIP}" | awk -F"[/[:space:]]+" '/open/ {print $1,$4}')
+  echo "External NMAP scan results:"
+  echo "$rex"
+}
+
+# Return ports that are serving to localhost
+function InternalNmap() {
+  rin=$(nmap localhost | awk -F"[/[:space:]]+" '/open/ {print $1,$4}')
+  echo "Internal NMAP scan results:"
+  echo "$rin"
+}
+
+# Only IPv4 ports listening from the network 
+# >:( -s functions took a piece of my soul 
+function ExternalListeningPorts() {
+  elpo=$(ss -ltpn | awk -v ip="$myIP" -F"[[:space:]:(),]+" '/LISTEN/ && $5 != ip && !/127.0.0./ && !/\[::\]/ {print $5,$8}' | tr -d "\"")
+  if [[ -z "$elpo" ]]; then
+    echo "External listening ports (except ${myIP}):"
+    echo "$elpo" | column -t
+  fi
+}
+
+# Only IPv4 ports listening from localhost
+function InternalListeningPorts() {
+  ilpo=$(ss -ltpn | awk -v ip="$myIP" -F"[[:space:]:(),]+" '/127.0.0./ || $5 == ip {print $5,$9}' | tr -d "\"")
+  if [[ -z "$ilpo" ]]; then
+    echo "Internal listening ports (including ${myIP}):"
+    echo "$ilpo" | column -t
+  fi
+}
+
+# Todo-3: If the program is not taking exactly 2 arguments, print helpmenu
+
+# Todo-4: Use getopts to accept options -n and -s (both will have an argument)
+# If the argument is not internal or external, call helpmenu
+# If an option other then -n or -s is given, call helpmenu
+# If the options and arguments are given correctly, call corresponding functions
+# For instance: -n internal => will call NMAP on localhost
+#               -s external => will call ss on network (non-local)
+
+
+if [ "$#" -ne 2 ]; then
+  helpmenu
+fi
+
+#hehe fancy 
+while getopts "n:s:" opt; do
+  case $opt in
+    n)
+      if [ "$OPTARG" == "external" ]; then
+        ExternalNmap
+      elif [ "$OPTARG" == "internal" ]; then
+        InternalNmap
+      else
+        helpmenu
+      fi
+      ;;
+    s)
+      if [ "$OPTARG" == "external" ]; then
+        ExternalListeningPorts
+      elif [ "$OPTARG" == "internal" ]; then
+        InternalListeningPorts
+      else
+        helpmenu
+      fi
+      ;;
+    *)
+      helpmenu
+      ;;
+  esac
+done
+
+if [ $OPTIND -eq 1 ]; then
+  helpmenu
+fi
