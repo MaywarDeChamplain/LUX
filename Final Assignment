@@ -1,0 +1,60 @@
+#!/bin/bash
+
+link="10.0.17.26/IOC.html"
+
+if ! curl -s "$link" -o /dev/null; then
+    echo "Connection not working prolly cuz u mistyped the ip again u dolt"
+    exit 1
+fi
+
+curl -s "$link" | grep -oP '<td>\K.*?(?=</td>)' | sed -n '1~2p' > IOC.txt
+
+if [[ ! -s IOC.txt ]]; then
+    echo "Nothin found"
+    exit 1
+fi
+
+logfile="access.log"
+IOCs="IOC.txt"
+reports="report.txt"
+
+> "$reports"
+
+while IFS= read -r ioc; do
+    grep "$ioc" "$logfile" | awk '{print $1, substr($4,2), $7}' >> "$reports"
+done < "$IOCs"
+
+if [[ ! -s "$reports" ]]; then
+    echo "Nothin found in access.log"
+    exit 1
+fi
+
+echo "Done, saved to $reports."
+
+output_file="/var/www/html/report.html"
+
+if [[ ! -d "/var/www/html" ]]; then
+    echo "/var/www/html not found. Creating directory."
+    sudo mkdir -p /var/www/html
+    sudo chmod 755 /var/www/html
+fi
+
+echo "<html>" > "$output_file"
+echo "<body>" >> "$output_file"
+echo "<h1>Access logs</h1>" >> "$output_file"
+echo "<table border='1'>" >> "$output_file"
+
+while IFS= read -r line; do
+    echo "<tr><td>$line</td></tr>" >> "$output_file"
+done < "$reports"
+
+echo "</table>" >> "$output_file"
+echo "</body>" >> "$output_file"
+echo "</html>" >> "$output_file"
+
+if [[ -f "$output_file" ]]; then
+    echo "Report created and available at /var/www/html/report.html hotline ;)"
+else
+    echo "Failed to create /var/www/html/report.html"
+    exit 1
+fi
